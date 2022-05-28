@@ -1,3 +1,3 @@
-# chat
+# ChatApp
 * Flutter
 * Firebase
