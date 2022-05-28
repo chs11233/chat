@@ -1,5 +1,8 @@
+import 'package:chat/chatting/chat/new_message.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../chatting/chat/message.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
@@ -43,13 +46,19 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             onPressed: () {
               _authentication.signOut();
-              Navigator.pop(context);
             },
           ),
         ],
       ),
-      body: Center(
-        child: Text('Chat Screen'),
+      body: Container(
+        child: Column(
+          children: [
+            Expanded(
+              child: Messages(),
+            ),
+            NewMessage(),
+          ],
+        ),
       ),
     );
   }
