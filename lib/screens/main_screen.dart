@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:chat/add_image/add_image.dart';
 import 'package:chat/config/palette.dart';
 import 'package:chat/screens/chat_screen.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class LoginSignupScreen extends StatefulWidget {
   const LoginSignupScreen({Key? key}) : super(key: key);
@@ -22,6 +24,11 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
   String userName = '';
   String userEmail = '';
   String userPassword = '';
+  File? userPickedImage;
+
+  void pickedImage(File image) {
+    userPickedImage = image;
+  }
 
   void _tryValidation() {
     final isValid = _formKey.currentState!.validate();
@@ -34,10 +41,7 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
     showDialog(
       context: context,
       builder: (cotext) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          child: AddImage()
-        );
+        return Dialog(backgroundColor: Colors.white, child: AddImage());
       },
     );
   }
@@ -465,6 +469,18 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                           showSpinner = true;
                         });
                         if (isSignupScreen) {
+                          if (userPickedImage == null) {
+                            setState(() {
+                              showSpinner = false;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('이미지를 확인하여주세요.'),
+                                backgroundColor: Colors.blue,
+                              ),
+                            );
+                            return;
+                          }
                           _tryValidation();
                           try {
                             final newUser = await _authentication
@@ -473,11 +489,24 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                               password: userPassword,
                             );
 
+                            final refImage = FirebaseStorage.instance
+                                .ref()
+                                .child('picked_image')
+                                .child(newUser.user!.uid + '.png');
+
+                            await refImage.putFile(userPickedImage!);
+                            final url = await refImage.getDownloadURL();
+
                             await FirebaseFirestore.instance
                                 .collection('user')
                                 .doc(newUser.user!.uid)
                                 .set(
-                                    {'userName': userName, 'email': userEmail});
+                              {
+                                'userName': userName,
+                                'email': userEmail,
+                                'picked_image': url
+                              },
+                            );
 
                             if (newUser.user != null) {
                               Navigator.push(
@@ -494,12 +523,14 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                             }
                           } catch (e) {
                             print(e);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('이메일이나 비밀번호를 확인하여주세요.'),
-                                backgroundColor: Colors.blue,
-                              ),
-                            );
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('이메일이나 비밀번호를 확인하여주세요.'),
+                                  backgroundColor: Colors.blue,
+                                ),
+                              );
+                            }
                           }
                         }
                         if (!isSignupScreen) {
