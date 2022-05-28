@@ -1,3 +1,4 @@
+import 'package:chat/add_image/add_image.dart';
 import 'package:chat/config/palette.dart';
 import 'package:chat/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +28,18 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
     if (isValid) {
       _formKey.currentState!.save();
     }
+  }
+
+  void showAlert(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (cotext) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          child: AddImage()
+        );
+      },
+    );
   }
 
   @override
@@ -101,10 +114,7 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                   curve: Curves.easeIn,
                   padding: EdgeInsets.all(20),
                   height: isSignupScreen ? 280 : 250,
-                  width: MediaQuery
-                      .of(context)
-                      .size
-                      .width - 40,
+                  width: MediaQuery.of(context).size.width - 40,
                   margin: EdgeInsets.symmetric(horizontal: 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -158,18 +168,36 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                               },
                               child: Column(
                                 children: [
-                                  Text(
-                                    '회원가입',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: isSignupScreen
-                                            ? Palette.activeColor
-                                            : Palette.textColor1),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '회원가입',
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: isSignupScreen
+                                                ? Palette.activeColor
+                                                : Palette.textColor1),
+                                      ),
+                                      SizedBox(
+                                        width: 15,
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          showAlert(context);
+                                        },
+                                        child: Icon(
+                                          Icons.image,
+                                          color: isSignupScreen
+                                              ? Colors.cyan
+                                              : Colors.grey[300],
+                                        ),
+                                      )
+                                    ],
                                   ),
                                   if (isSignupScreen)
                                     Container(
-                                      margin: EdgeInsets.only(top: 3),
+                                      margin: EdgeInsets.fromLTRB(0, 3, 35, 0),
                                       height: 2,
                                       width: 55,
                                       color: Colors.orange,
@@ -445,11 +473,11 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                               password: userPassword,
                             );
 
-                            await   FirebaseFirestore.instance.collection('user').doc(
-                                newUser.user!.uid).set({
-                              'userName' : userName,
-                              'email' : userEmail
-                            });
+                            await FirebaseFirestore.instance
+                                .collection('user')
+                                .doc(newUser.user!.uid)
+                                .set(
+                                    {'userName': userName, 'email': userEmail});
 
                             if (newUser.user != null) {
                               Navigator.push(
@@ -526,14 +554,8 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                 duration: Duration(milliseconds: 500),
                 curve: Curves.easeIn,
                 top: isSignupScreen
-                    ? MediaQuery
-                    .of(context)
-                    .size
-                    .height - 125
-                    : MediaQuery
-                    .of(context)
-                    .size
-                    .height - 165,
+                    ? MediaQuery.of(context).size.height - 125
+                    : MediaQuery.of(context).size.height - 165,
                 right: 0,
                 left: 0,
                 child: Column(
